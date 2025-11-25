@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ content.app_name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+  </head>
+  <body style="--primary: {{ content.primary_color }}; --accent: {{ content.accent_color }}; --background: {{ content.background_color }}">
+    <div class="page">
+      <header class="hero">
+        <div class="logo-badge">
+          <span class="spark"></span>
+          <span class="text">{{ content.app_name }}</span>
+        </div>
+        <h1>{{ content.hero_title }}</h1>
+        <p class="subtitle">{{ content.hero_subtitle }}</p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form class="download-form" action="{{ url_for('landing_page') }}" method="POST">
+          <div class="input-group">
+            <span class="input-icon">🔗</span>
+            <input
+              type="url"
+              name="video_url"
+              placeholder="{{ content.input_placeholder }}"
+              value="{{ download_url }}"
+              required
+            />
+            <button type="submit">{{ content.cta_text }}</button>
+          </div>
+          <p class="form-hint">No login required. No watermark. Full HD in seconds.</p>
+        </form>
+      </header>
+
+      <section class="features">
+        <h2>Why creators love {{ content.app_name }}</h2>
+        <div class="feature-grid">
+          {% for point in content.feature_points %}
+          <article class="feature-card">
+            <span class="feature-icon">⚡</span>
+            <p>{{ point }}</p>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>Built for visionaries. Powered by InspireDownloader.</p>
+      </footer>
+    </div>
+  </body>
+</html>

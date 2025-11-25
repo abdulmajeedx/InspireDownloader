@@ -1,0 +1,15 @@
+{
+  "app_name": "InspireDownloader",
+  "hero_title": "Advanced TikTok Video Downloader",
+  "hero_subtitle": "Save TikTok videos in high quality with smart link recognition, metadata enrichment, and rapid delivery.",
+  "primary_color": "#7B4BFF",
+  "background_color": "#090E1A",
+  "accent_color": "#17F1D1",
+  "cta_text": "Download Now",
+  "input_placeholder": "Paste your TikTok link here...",
+  "feature_points": [
+    "AI-powered link analysis to auto-detect best media quality",
+    "Batch downloads with smart queueing and progress tracking",
+    "Built-in privacy shield to strip watermarks & tracking codes"
+  ]
+}
