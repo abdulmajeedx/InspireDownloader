@@ -6,6 +6,10 @@ import time
 from functools import wraps
 from pathlib import Path
 
+<<<<<<< HEAD
+=======
+from babel import Locale
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -19,6 +23,10 @@ from flask import (
     session,
     url_for,
 )
+<<<<<<< HEAD
+=======
+from flask_babel import Babel, gettext as _, ngettext, get_locale
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 from yt_dlp import YoutubeDL
@@ -120,11 +128,35 @@ def create_app() -> Flask:
     admin_username = require_env("ADMIN_USERNAME")
     admin_password_hash = require_env("ADMIN_PASSWORD_HASH")
 
+<<<<<<< HEAD
+=======
+    # Babel configuration
+    app.config["LANGUAGES"] = {"en": "English", "ar": "العربية"}
+    app.config["BABEL_DEFAULT_LOCALE"] = "en"
+    app.config["BABEL_DEFAULT_TIMEZONE"] = "UTC"
+
+    def get_locale():
+        # 1) Check URL parameter ?lang=xx
+        if "lang" in request.args and request.args["lang"] in app.config["LANGUAGES"]:
+            session["language"] = request.args["lang"]
+        # 2) Check session
+        if "language" in session and session["language"] in app.config["LANGUAGES"]:
+            return session["language"]
+        # 3) Check Accept-Language header
+        return request.accept_languages.best_match(app.config["LANGUAGES"].keys(), app.config["BABEL_DEFAULT_LOCALE"])
+
+    babel = Babel(app, locale_selector=get_locale)
+
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
     def login_required(view_func):
         @wraps(view_func)
         def wrapper(*args, **kwargs):
             if not session.get("is_admin"):
+<<<<<<< HEAD
                 flash("You must sign in to access this page.", "warning")
+=======
+                flash(_("You must sign in to access this page."), "warning")
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                 return redirect(url_for("admin_login"))
             return view_func(*args, **kwargs)
 
@@ -156,16 +188,28 @@ def create_app() -> Flask:
             download_url = request.form.get("video_url", "").strip()
 
             if not download_url:
+<<<<<<< HEAD
                 flash("Please paste a TikTok link before downloading.", "danger")
             elif "tiktok.com" not in download_url:
                 flash("Only TikTok video URLs are supported at the moment.", "warning")
+=======
+                flash(_("Please paste a TikTok link before downloading."), "danger")
+            elif "tiktok.com" not in download_url:
+                flash(_("Only TikTok video URLs are supported at the moment."), "warning")
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
             else:
                 try:
                     video_path, temp_dir, info = download_tiktok_video(download_url)
                 except DownloadError as err:
+<<<<<<< HEAD
                     flash("Unable to download this TikTok link. Please verify the URL.", "danger")
                 except Exception:
                     flash("Unexpected error while downloading. Try again shortly.", "danger")
+=======
+                    flash(_("Unable to download this TikTok link. Please verify the URL."), "danger")
+                except Exception:
+                    flash(_("Unexpected error while downloading. Try again shortly."), "danger")
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                 else:
                     @after_this_request
                     def cleanup(response):
@@ -180,7 +224,11 @@ def create_app() -> Flask:
                     download_name = secure_filename(f"{title}{video_path.suffix}") or f"download{video_path.suffix}"
                     return send_file(video_path, as_attachment=True, download_name=download_name)
 
+<<<<<<< HEAD
         return render_template("index.html", content=content, download_url=download_url)
+=======
+        return render_template("index.html", content=content, download_url=download_url, get_locale=get_locale)
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
 
     @app.route("/api/content")
     def content_api():
@@ -193,7 +241,11 @@ def create_app() -> Flask:
         content = load_content()
         if locked_until and current_time < locked_until:
             remaining = int(locked_until - current_time)
+<<<<<<< HEAD
             flash(f"Account temporarily locked. Try again in {remaining} seconds.", "danger")
+=======
+            flash(_("Account temporarily locked. Try again in %(seconds)s seconds.", seconds=remaining), "danger")
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
             return render_template("admin_login.html", content=content)
 
         if request.method == "POST":
@@ -209,11 +261,19 @@ def create_app() -> Flask:
             session["login_attempts"] = session.get("login_attempts", 0) + 1
             if session["login_attempts"] >= MAX_LOGIN_ATTEMPTS:
                 session["locked_until"] = current_time + LOCKOUT_SECONDS
+<<<<<<< HEAD
                 flash("Too many failed attempts. Login locked for 10 minutes.", "danger")
             else:
                 attempts_left = MAX_LOGIN_ATTEMPTS - session["login_attempts"]
                 flash(
                     f"Invalid credentials. {attempts_left} attempt(s) remaining before lockout.",
+=======
+                flash(_("Too many failed attempts. Login locked for 10 minutes."), "danger")
+            else:
+                attempts_left = MAX_LOGIN_ATTEMPTS - session["login_attempts"]
+                flash(
+                    _("Invalid credentials. %(count)s attempt(s) remaining before lockout.", count=attempts_left),
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                     "danger",
                 )
         return render_template("admin_login.html", content=content)
@@ -222,7 +282,11 @@ def create_app() -> Flask:
     @login_required
     def admin_logout():
         session.clear()
+<<<<<<< HEAD
         flash("Signed out successfully.", "success")
+=======
+        flash(_("Signed out successfully."), "success")
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
         return redirect(url_for("admin_login"))
 
     @app.route("/admin", methods=["GET", "POST"])
@@ -266,7 +330,11 @@ def create_app() -> Flask:
                 (background_color, "Background color"),
             ):
                 if not is_valid_hex(color_value):
+<<<<<<< HEAD
                     flash(f"{label} must be a valid HEX code (e.g., #112233).", "danger")
+=======
+                    flash(_("%(label)s must be a valid HEX code (e.g., #112233).", label=label), "danger")
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                     return render_template(
                         "admin_dashboard.html",
                         content=draft_content,
@@ -274,7 +342,11 @@ def create_app() -> Flask:
                     )
 
             if not app_name.strip():
+<<<<<<< HEAD
                 flash("Application name cannot be empty.", "danger")
+=======
+                flash(_("Application name cannot be empty."), "danger")
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                 return render_template(
                     "admin_dashboard.html",
                     content=draft_content,
@@ -284,7 +356,11 @@ def create_app() -> Flask:
             updated_content = {key: value.strip() if isinstance(value, str) else value for key, value in draft_content.items()}
 
             persist_content(updated_content)
+<<<<<<< HEAD
             flash("Content updated successfully.", "success")
+=======
+            flash(_("Content updated successfully."), "success")
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
             return redirect(url_for("admin_dashboard"))
 
         return render_template(
@@ -298,4 +374,8 @@ app = create_app()
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+=======
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8004)))
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)

@@ -1,0 +1,111 @@
+# Arabic translations for InspireDownloader.
+# Copyright (C) 2025
+# This file is distributed under the same license as the InspireDownloader project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: InspireDownloader 0.1\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-25 18:30+0000\n"
+"PO-Revision-Date: 2025-11-25 18:30+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 4.0.0\n"
+
+#: app.py:146
+msgid "You must sign in to access this page."
+msgstr "يجب تسجيل الدخول للوصول إلى هذه الصفحة."
+
+#: app.py:178
+msgid "Please paste a TikTok link before downloading."
+msgstr "الرجاء لصق رابط تيك توك قبل التحميل."
+
+#: app.py:180
+msgid "Only TikTok video URLs are supported at the moment."
+msgstr "في الوقت الحالي، روابط فيديوهات تيك توك فقط مدعومة."
+
+#: app.py:185
+msgid "Unable to download this TikTok link. Please verify the URL."
+msgstr "لم نتمكن من تحميل هذا الرابط. الرجاء التحقق من الرابط."
+
+#: app.py:187
+msgid "Unexpected error while downloading. Try again shortly."
+msgstr "حدث خطأ غير متوقع أثناء التحميل. حاول مرة أخرى قريبًا."
+
+#: app.py:215
+#, python-format
+msgid "Account temporarily locked. Try again in %(seconds)s seconds."
+msgstr "الحساب مقفل مؤقتًا. حاول مرة أخرى خلال %(seconds)s ثانية."
+
+#: app.py:231
+msgid "Too many failed attempts. Login locked for 10 minutes."
+msgstr "محاولات فاشلة كثيرة. تم قفل الدخول لمدة 10 دقائق."
+
+#: app.py:235
+#, python-format
+msgid "Invalid credentials. %(count)s attempt(s) remaining before lockout."
+msgstr "بيانات الدخول غير صحيحة. %(count)s محاولة(ات) متبقية قبل القفل."
+
+#: app.py:244
+msgid "Signed out successfully."
+msgstr "تم تسجيل الخروج بنجاح."
+
+#: app.py:288
+#, python-format
+msgid "%(label)s must be a valid HEX code (e.g., #112233)."
+msgstr "%(label)s يجب أن يكون رمز HEX صالح (مثال: #112233)."
+
+#: app.py:296
+msgid "Application name cannot be empty."
+msgstr "لا يمكن أن يكون اسم التطبيق فارغًا."
+
+#: app.py:306
+msgid "Content updated successfully."
+msgstr "تم تحديث المحتوى بنجاح."
+
+#: templates/index.html:22
+msgid "Advanced TikTok Video Downloader"
+msgstr "محمّل فيديوهات تيك توك المتقدم"
+
+#: templates/index.html:23
+msgid "Save TikTok videos in high quality with smart link recognition, metadata enrichment, and rapid delivery."
+msgstr "احفظ فيديوهات تيك توك بجودة عالية مع التعرف الذكي على الروابط وإثراء البيانات الوصفية والتسليم السريع."
+
+#: templates/index.html:40
+msgid "Paste your TikTok link here..."
+msgstr "ألصق رابط تيك توك هنا..."
+
+#: templates/index.html:44
+msgid "Download Now"
+msgstr "حمّل الآن"
+
+#: templates/index.html:46
+msgid "No login required. No watermark. Full HD in seconds."
+msgstr "لا يتطلب تسجيل دخول. لا يوجد علامة مائية. جودة كاملة HD في ثوانٍ."
+
+#: templates/index.html:51
+#, python-format
+msgid "Why creators love %(app)s"
+msgstr "لماذا يحب المبدعون %(app)s"
+
+#: templates/index.html:55
+msgid "AI-powered link analysis to auto-detect best media quality"
+msgstr "تحليل الروابط بالذكاء الاصطناعي لاكتشاف أفضل جودة للوسائط تلقائيًا"
+
+#: templates/index.html:59
+msgid "Batch downloads with smart queueing and progress tracking"
+msgstr "تحميلات مجمعة مع الطابور الذكي وتتبع التقدم"
+
+#: templates/index.html:63
+msgid "Built-in privacy shield to strip watermarks & tracking codes"
+msgstr "درع خصوصية مدمج لإزالة العلامات المائية وأكواد التتبع"
+
+#: templates/index.html:69
+#, python-format
+msgid "Built for visionaries. Powered by %(app)s."
+msgstr "مبني للمبدعين. مدعوم بـ %(app)s."

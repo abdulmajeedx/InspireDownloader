@@ -1,0 +1,111 @@
+# English translations for InspireDownloader.
+# Copyright (C) 2025
+# This file is distributed under the same license as the InspireDownloader project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: InspireDownloader 0.1\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-25 18:30+0000\n"
+"PO-Revision-Date: 2025-11-25 18:30+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 4.0.0\n"
+
+#: app.py:146
+msgid "You must sign in to access this page."
+msgstr "You must sign in to access this page."
+
+#: app.py:178
+msgid "Please paste a TikTok link before downloading."
+msgstr "Please paste a TikTok link before downloading."
+
+#: app.py:180
+msgid "Only TikTok video URLs are supported at the moment."
+msgstr "Only TikTok video URLs are supported at the moment."
+
+#: app.py:185
+msgid "Unable to download this TikTok link. Please verify the URL."
+msgstr "Unable to download this TikTok link. Please verify the URL."
+
+#: app.py:187
+msgid "Unexpected error while downloading. Try again shortly."
+msgstr "Unexpected error while downloading. Try again shortly."
+
+#: app.py:215
+#, python-format
+msgid "Account temporarily locked. Try again in %(seconds)s seconds."
+msgstr "Account temporarily locked. Try again in %(seconds)s seconds."
+
+#: app.py:231
+msgid "Too many failed attempts. Login locked for 10 minutes."
+msgstr "Too many failed attempts. Login locked for 10 minutes."
+
+#: app.py:235
+#, python-format
+msgid "Invalid credentials. %(count)s attempt(s) remaining before lockout."
+msgstr "Invalid credentials. %(count)s attempt(s) remaining before lockout."
+
+#: app.py:244
+msgid "Signed out successfully."
+msgstr "Signed out successfully."
+
+#: app.py:288
+#, python-format
+msgid "%(label)s must be a valid HEX code (e.g., #112233)."
+msgstr "%(label)s must be a valid HEX code (e.g., #112233)."
+
+#: app.py:296
+msgid "Application name cannot be empty."
+msgstr "Application name cannot be empty."
+
+#: app.py:306
+msgid "Content updated successfully."
+msgstr "Content updated successfully."
+
+#: templates/index.html:22
+msgid "Advanced TikTok Video Downloader"
+msgstr "Advanced TikTok Video Downloader"
+
+#: templates/index.html:23
+msgid "Save TikTok videos in high quality with smart link recognition, metadata enrichment, and rapid delivery."
+msgstr "Save TikTok videos in high quality with smart link recognition, metadata enrichment, and rapid delivery."
+
+#: templates/index.html:40
+msgid "Paste your TikTok link here..."
+msgstr "Paste your TikTok link here..."
+
+#: templates/index.html:44
+msgid "Download Now"
+msgstr "Download Now"
+
+#: templates/index.html:46
+msgid "No login required. No watermark. Full HD in seconds."
+msgstr "No login required. No watermark. Full HD in seconds."
+
+#: templates/index.html:51
+#, python-format
+msgid "Why creators love %(app)s"
+msgstr "Why creators love %(app)s"
+
+#: templates/index.html:55
+msgid "AI-powered link analysis to auto-detect best media quality"
+msgstr "AI-powered link analysis to auto-detect best media quality"
+
+#: templates/index.html:59
+msgid "Batch downloads with smart queueing and progress tracking"
+msgstr "Batch downloads with smart queueing and progress tracking"
+
+#: templates/index.html:63
+msgid "Built-in privacy shield to strip watermarks & tracking codes"
+msgstr "Built-in privacy shield to strip watermarks & tracking codes"
+
+#: templates/index.html:69
+#, python-format
+msgid "Built for visionaries. Powered by %(app)s."
+msgstr "Built for visionaries. Powered by %(app)s."

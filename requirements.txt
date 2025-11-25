@@ -1,3 +1,7 @@
 Flask==3.0.3
 python-dotenv==1.0.1
 yt-dlp==2024.11.4
+<<<<<<< HEAD
+=======
+Flask-Babel==4.0.0
+>>>>>>> 04f587f (Add multi-language support with Flask-Babel)
