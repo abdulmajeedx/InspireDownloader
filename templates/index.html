@@ -40,17 +40,66 @@
               placeholder="{{ _('Paste your TikTok link here...') }}"
               value="{{ download_url }}"
               required
+              id="video-url"
             />
+            <button type="submit" id="download-btn">{{ _('Download Now') }}</button>
+          </div>
+          <div class="quality-row">
             <select name="quality" class="quality-select">
               <option value="best">{{ _('Best Quality') }}</option>
               <option value="4k">4K</option>
               <option value="1080p">1080p</option>
               <option value="720p">720p</option>
             </select>
-            <button type="submit">{{ _('Download Now') }}</button>
           </div>
           <p class="form-hint">{{ _('No login required. No watermark. Full HD in seconds.') }}</p>
         </form>
+        
+        <!-- Video Preview Section -->
+        <div id="video-preview" class="video-preview hidden">
+          <div class="preview-container">
+            <div class="preview-thumbnail">
+              <img id="preview-image" src="" alt="Video thumbnail" />
+              <div class="preview-overlay">
+                <span class="duration" id="preview-duration">0:00</span>
+              </div>
+            </div>
+            <div class="preview-info">
+              <h3 id="preview-title">Video Title</h3>
+              <div class="preview-stats">
+                <span class="stat">
+                  <span class="stat-icon">👁️</span>
+                  <span id="preview-views">0</span> {{ _('views') }}
+                </span>
+                <span class="stat">
+                  <span class="stat-icon">❤️</span>
+                  <span id="preview-likes">0</span> {{ _('likes') }}
+                </span>
+                <span class="stat">
+                  <span class="stat-icon">📁</span>
+                  <span id="preview-size">0 MB</span>
+                </span>
+              </div>
+              <div class="preview-uploader">
+                <span class="uploader-name" id="preview-uploader">@username</span>
+                <span class="upload-date" id="preview-date">2024-01-01</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div id="download-progress" class="download-progress hidden">
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text">
+              <span id="progress-percentage">0%</span>
+              <span id="progress-speed">0 MB/s</span>
+            </div>
+          </div>
+        </div>
       </header>
 
       <section class="features">
@@ -80,5 +129,289 @@
         </div>
       </footer>
     </div>
-  </body>
-</html>
+  <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+      // Toast notification system
+      class ToastManager {
+        constructor() {
+          this.container = document.getElementById('toast-container');
+        }
+
+        show(message, type = 'info', duration = 5000) {
+          const toast = document.createElement('div');
+          toast.className = `toast toast-${type}`;
+          toast.innerHTML = `
+            <div class="toast-content">
+              <span class="toast-icon">${this.getIcon(type)}</span>
+              <span class="toast-message">${message}</span>
+              <button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+          `;
+
+          this.container.appendChild(toast);
+
+          // Trigger animation
+          setTimeout(() => toast.classList.add('show'), 10);
+
+          // Auto remove
+          setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+          }, duration);
+        }
+
+        getIcon(type) {
+          const icons = {
+            'success': '✅',
+            'error': '❌',
+            'warning': '⚠️',
+            'info': 'ℹ️'
+          };
+          return icons[type] || icons.info;
+        }
+      }
+
+      const toastManager = new ToastManager();
+
+      // Video preview functionality
+      let currentVideoInfo = null;
+      let previewTimeout = null;
+
+      async function fetchVideoInfo(url) {
+        try {
+          const response = await fetch('/api/video-info', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch video info');
+          }
+
+          return await response.json();
+        } catch (error) {
+          console.error('Error fetching video info:', error);
+          return null;
+        }
+      }
+
+      function formatDuration(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 MB';
+        const mb = bytes / (1024 * 1024);
+        return `${mb.toFixed(1)} MB`;
+      }
+
+      function formatNumber(num) {
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(1) + 'M';
+        } else if (num >= 1000) {
+          return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+      }
+
+      function showVideoPreview(info) {
+        const preview = document.getElementById('video-preview');
+        const image = document.getElementById('preview-image');
+        const title = document.getElementById('preview-title');
+        const duration = document.getElementById('preview-duration');
+        const views = document.getElementById('preview-views');
+        const likes = document.getElementById('preview-likes');
+        const size = document.getElementById('preview-size');
+        const uploader = document.getElementById('preview-uploader');
+        const date = document.getElementById('preview-date');
+
+        // Update preview content
+        image.src = info.thumbnail || '';
+        title.textContent = info.title || 'Unknown Title';
+        duration.textContent = formatDuration(info.duration || 0);
+        views.textContent = formatNumber(info.view_count || 0);
+        likes.textContent = formatNumber(info.like_count || 0);
+        uploader.textContent = info.uploader || '@unknown';
+        date.textContent = info.upload_date ? new Date(info.upload_date).toLocaleDateString() : '';
+
+        // Estimate file size based on quality
+        const qualitySelect = document.querySelector('.quality-select');
+        const selectedQuality = qualitySelect.value;
+        let estimatedSize = 0;
+        
+        if (info.formats && info.formats.length > 0) {
+          // Find best matching format
+          const format = info.formats.find(f => {
+            if (selectedQuality === '4k') return f.height >= 1440;
+            if (selectedQuality === '1080p') return f.height >= 720 && f.height < 1440;
+            if (selectedQuality === '720p') return f.height < 720;
+            return true; // best quality
+          });
+          
+          if (format && format.filesize) {
+            estimatedSize = format.filesize;
+          }
+        }
+        
+        size.textContent = formatFileSize(estimatedSize);
+
+        // Show preview
+        preview.classList.remove('hidden');
+        preview.classList.add('show');
+      }
+
+      function hideVideoPreview() {
+        const preview = document.getElementById('video-preview');
+        preview.classList.remove('show');
+        setTimeout(() => preview.classList.add('hidden'), 300);
+      }
+
+      // Input event listener for video URL
+      const videoUrlInput = document.getElementById('video-url');
+      videoUrlInput.addEventListener('input', async (e) => {
+        const url = e.target.value.trim();
+        
+        // Clear previous timeout
+        if (previewTimeout) {
+          clearTimeout(previewTimeout);
+        }
+
+        if (url && url.includes('tiktok.com')) {
+          // Debounce preview fetch
+          previewTimeout = setTimeout(async () => {
+            const info = await fetchVideoInfo(url);
+            if (info && !info.error) {
+              currentVideoInfo = info;
+              showVideoPreview(info);
+            } else {
+              hideVideoPreview();
+            }
+          }, 500);
+        } else {
+          hideVideoPreview();
+          currentVideoInfo = null;
+        }
+      });
+
+      // Quality change listener to update estimated size
+      document.querySelector('.quality-select').addEventListener('change', () => {
+        if (currentVideoInfo) {
+          showVideoPreview(currentVideoInfo);
+        }
+      });
+
+      // Download progress simulation
+      function showDownloadProgress() {
+        const progressContainer = document.getElementById('download-progress');
+        const progressFill = document.getElementById('progress-fill');
+        const percentage = document.getElementById('progress-percentage');
+        const speed = document.getElementById('progress-speed');
+
+        progressContainer.classList.remove('hidden');
+        progressContainer.classList.add('show');
+
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += Math.random() * 15;
+          if (progress > 90) {
+            clearInterval(interval);
+            progress = 90;
+          }
+
+          progressFill.style.width = `${progress}%`;
+          percentage.textContent = `${Math.round(progress)}%`;
+          speed.textContent = `${(Math.random() * 5 + 1).toFixed(1)} MB/s`;
+        }, 200);
+
+        return interval;
+      }
+
+      function hideDownloadProgress() {
+        const progressContainer = document.getElementById('download-progress');
+        const progressFill = document.getElementById('progress-fill');
+        const percentage = document.getElementById('progress-percentage');
+
+        progressFill.style.width = '100%';
+        percentage.textContent = '100%';
+
+        setTimeout(() => {
+          progressContainer.classList.remove('show');
+          setTimeout(() => progressContainer.classList.add('hidden'), 300);
+        }, 500);
+      }
+
+      // Form submission with progress
+      document.querySelector('.download-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const url = document.getElementById('video-url').value.trim();
+        const quality = document.querySelector('.quality-select').value;
+        
+        if (!url) {
+          toastManager.show('{{ _("Please paste a TikTok link before downloading.") }}', 'warning');
+          return;
+        }
+
+        if (!url.includes('tiktok.com')) {
+          toastManager.show('{{ _("Only TikTok video URLs are supported at the moment.") }}', 'warning');
+          return;
+        }
+
+        // Show progress
+        const progressInterval = showDownloadProgress();
+        
+        try {
+          // Create form data and submit
+          const formData = new FormData();
+          formData.append('video_url', url);
+          formData.append('quality', quality);
+
+          const response = await fetch('/', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `tiktok-video.mp4`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
+            
+            toastManager.show('{{ _("Video downloaded successfully!") }}', 'success');
+          } else {
+            toastManager.show('{{ _("Unable to download this TikTok link. Please verify the URL.") }}', 'error');
+          }
+        } catch (error) {
+          toastManager.show('{{ _("Unexpected error while downloading. Try again shortly.") }}', 'error');
+        } finally {
+          clearInterval(progressInterval);
+          hideDownloadProgress();
+        }
+      });
+
+      // Replace flash messages with toasts
+      document.addEventListener('DOMContentLoaded', () => {
+        // Check for any existing flash messages and convert them to toasts
+        const flashMessages = document.querySelectorAll('.flash');
+        flashMessages.forEach(flash => {
+          const message = flash.textContent.trim();
+          const type = flash.classList.contains('danger') ? 'error' : 
+                       flash.classList.contains('warning') ? 'warning' : 
+                       flash.classList.contains('success') ? 'success' : 'info';
+          toastManager.show(message, type);
+          flash.remove();
+        });
+      });
+    </script>

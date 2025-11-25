@@ -121,7 +121,19 @@ msgstr "1080p"
 msgid "720p"
 msgstr "720p"
 
+#: templates/index.html:70
+msgid "views"
+msgstr "مشاهدة"
+
+#: templates/index.html:74
+msgid "likes"
+msgstr "إعجاب"
+
+#: templates/index.html:390
+msgid "Video downloaded successfully!"
+msgstr "تم تحميل الفيديو بنجاح!"
+
 #: templates/index.html:69
 #, python-format
 msgid "Built for visionaries. Powered by %(app)s."
-msgstr "مبني للمبدعين. مدعوم بـ %(app)s."
+msgstr "Powered by %(app)s."

@@ -20,7 +20,7 @@ from flask import (
     session,
     url_for,
 )
-from flask_babel import Babel, gettext as _, ngettext, get_locale
+from flask_babel import Babel, gettext as _, ngettext, get_locale as _get_locale
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from redis import Redis
@@ -98,7 +98,7 @@ def download_tiktok_video(url: str, quality: str = "best") -> tuple[Path, Path, 
 
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
-        return video_path, temp_dir, info.get("id", "")
+        return video_path, temp_dir, info
         shutil.rmtree(temp_dir, ignore_errors=True)
         raise
 
@@ -237,6 +237,14 @@ def create_app() -> Flask:
                         # Cache the metadata for 1 hour (only if Redis is available)
                         if redis_client:
                             redis_client.setex(cache_key, 3600, json.dumps(info))
+                    
+                    # Ensure info is a dictionary
+                    if isinstance(info, str):
+                        info = {"title": info}
+                    
+                    title = info.get("title") or "tiktok-video"
+                    download_name = secure_filename(f"{title}{video_path.suffix}") or f"download{video_path.suffix}"
+                    return send_file(video_path, as_attachment=True, download_name=download_name)
                 except DownloadError as err:
                     flash(_("Unable to download this TikTok link. Please verify the URL."), "danger")
                 except Exception:
@@ -251,11 +259,73 @@ def create_app() -> Flask:
                             shutil.rmtree(temp_dir, ignore_errors=True)
                         return response
 
-                    title = info.get("title") or "tiktok-video"
-                    download_name = secure_filename(f"{title}{video_path.suffix}") or f"download{video_path.suffix}"
-                    return send_file(video_path, as_attachment=True, download_name=download_name)
+        return render_template("index.html", content=content, download_url=download_url, get_locale=_get_locale)
 
-        return render_template("index.html", content=content, download_url=download_url, get_locale=get_locale)
+    @app.route("/api/video-info", methods=["POST"])
+    def get_video_info():
+        """Get video information without downloading."""
+        data = request.get_json()
+        url = data.get("url", "").strip()
+        
+        if not url or "tiktok.com" not in url:
+            return jsonify({"error": "Invalid TikTok URL"}), 400
+        
+        try:
+            # Check cache first
+            cache_key = f"tiktok:info:{url}"
+            cached_info = None
+            if redis_client:
+                cached_info = redis_client.get(cache_key)
+            
+            if cached_info:
+                info = json.loads(cached_info)
+            else:
+                # Extract info without downloading
+                temp_dir = Path(tempfile.mkdtemp())
+                ydl_opts = {
+                    "quiet": True,
+                    "no_warnings": True,
+                    "extract_flat": False,
+                    "skip_download": True,
+                }
+                
+                with YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    # Cache for 30 minutes
+                    if redis_client:
+                        redis_client.setex(cache_key, 1800, json.dumps(info))
+                
+                shutil.rmtree(temp_dir, ignore_errors=True)
+            
+            # Extract relevant information
+            video_info = {
+                "title": info.get("title", "Unknown"),
+                "duration": info.get("duration", 0),
+                "view_count": info.get("view_count", 0),
+                "like_count": info.get("like_count", 0),
+                "thumbnail": info.get("thumbnail", ""),
+                "uploader": info.get("uploader", ""),
+                "upload_date": info.get("upload_date", ""),
+                "formats": []
+            }
+            
+            # Get available formats
+            if "formats" in info:
+                for fmt in info.get("formats", []):
+                    if fmt.get("vcodec") != "none" and fmt.get("acodec") != "none":
+                        video_info["formats"].append({
+                            "format_id": fmt.get("format_id"),
+                            "height": fmt.get("height"),
+                            "width": fmt.get("width"),
+                            "fps": fmt.get("fps"),
+                            "filesize": fmt.get("filesize"),
+                            "ext": fmt.get("ext")
+                        })
+            
+            return jsonify(video_info)
+            
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     @app.route("/api/content")
     def content_api():
@@ -373,4 +443,4 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8004)))
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8005)))
