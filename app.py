@@ -6,10 +6,7 @@ import time
 from functools import wraps
 from pathlib import Path
 
-<<<<<<< HEAD
-=======
 from babel import Locale
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -23,10 +20,10 @@ from flask import (
     session,
     url_for,
 )
-<<<<<<< HEAD
-=======
 from flask_babel import Babel, gettext as _, ngettext, get_locale
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from redis import Redis
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 from yt_dlp import YoutubeDL
@@ -76,27 +73,32 @@ def persist_content(payload: dict) -> None:
         json.dump(payload, config_file, ensure_ascii=False, indent=2)
 
 
-def download_tiktok_video(url: str) -> tuple[Path, Path, dict]:
-    temp_dir = Path(tempfile.mkdtemp(prefix="tikdl_"))
-    options = {
+def download_tiktok_video(url: str, quality: str = "best") -> tuple[Path, Path, dict]:
+    """Download TikTok video with specified quality."""
+    temp_dir = Path(tempfile.mkdtemp())
+    video_path = temp_dir / "video.mp4"
+
+    # Map quality to yt-dlp format strings
+    quality_map = {
+        "4k": "best[height<=2160]",
+        "1080p": "best[height<=1080]",
+        "720p": "best[height<=720]",
+        "best": "best"
+    }
+    
+    format_selector = quality_map.get(quality, "best")
+
+    ydl_opts = {
+        "format": format_selector,
+        "outtmpl": str(video_path),
         "quiet": True,
         "no_warnings": True,
-        "restrictfilenames": True,
-        "outtmpl": str(temp_dir / "%(id)s.%(ext)s"),
-        "format": "mp4/bestvideo+bestaudio/best",
-        "noplaylist": True,
-        "geo_bypass": True,
+        "extract_flat": False,
     }
 
-    try:
-        with YoutubeDL(options) as ydl:
-            info = ydl.extract_info(url, download=True)
-        video_id = info.get("id", "")
-        candidates = list(temp_dir.glob(f"{video_id}.*")) if video_id else list(temp_dir.glob("*") )
-        if not candidates:
-            raise RuntimeError("Download completed but video file was not found.")
-        return candidates[0], temp_dir, info
-    except Exception:
+    with YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        return video_path, temp_dir, info.get("id", "")
         shutil.rmtree(temp_dir, ignore_errors=True)
         raise
 
@@ -128,8 +130,27 @@ def create_app() -> Flask:
     admin_username = require_env("ADMIN_USERNAME")
     admin_password_hash = require_env("ADMIN_PASSWORD_HASH")
 
-<<<<<<< HEAD
-=======
+    # Redis configuration (optional)
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    try:
+        redis_client = Redis.from_url(redis_url, decode_responses=True)
+        # Test connection
+        redis_client.ping()
+    except Exception:
+        # Fallback to in-memory storage if Redis is not available
+        redis_client = None
+
+    # Rate limiting (only if Redis is available)
+    if redis_client:
+        limiter = Limiter(
+            app=app,
+            key_func=get_remote_address,
+            storage_uri=redis_url,
+            default_limits=["200 per day", "50 per hour"]
+        )
+    else:
+        limiter = None
+
     # Babel configuration
     app.config["LANGUAGES"] = {"en": "English", "ar": "العربية"}
     app.config["BABEL_DEFAULT_LOCALE"] = "en"
@@ -147,16 +168,11 @@ def create_app() -> Flask:
 
     babel = Babel(app, locale_selector=get_locale)
 
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
     def login_required(view_func):
         @wraps(view_func)
         def wrapper(*args, **kwargs):
             if not session.get("is_admin"):
-<<<<<<< HEAD
-                flash("You must sign in to access this page.", "warning")
-=======
                 flash(_("You must sign in to access this page."), "warning")
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                 return redirect(url_for("admin_login"))
             return view_func(*args, **kwargs)
 
@@ -179,37 +195,52 @@ def create_app() -> Flask:
         response.headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
         return response
 
-    @app.route("/", methods=["GET", "POST"])
-    def landing_page():
+    # Apply rate limiting decorator if available
+    if limiter:
+        @app.route("/", methods=["GET", "POST"])
+        @limiter.limit("10 per minute")
+        def landing_page():
+            return landing_page_impl()
+    else:
+        @app.route("/", methods=["GET", "POST"])
+        def landing_page():
+            return landing_page_impl()
+
+    def landing_page_impl():
         content = load_content()
         download_url = ""
 
         if request.method == "POST":
             download_url = request.form.get("video_url", "").strip()
-
+            quality = request.form.get("quality", "best")
+            
+            # Check cache first (only if Redis is available)
+            cache_key = f"tiktok:{download_url}:{quality}"
+            cached_info = None
+            if redis_client:
+                cached_info = redis_client.get(cache_key)
+            
             if not download_url:
-<<<<<<< HEAD
-                flash("Please paste a TikTok link before downloading.", "danger")
-            elif "tiktok.com" not in download_url:
-                flash("Only TikTok video URLs are supported at the moment.", "warning")
-=======
                 flash(_("Please paste a TikTok link before downloading."), "danger")
             elif "tiktok.com" not in download_url:
                 flash(_("Only TikTok video URLs are supported at the moment."), "warning")
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
             else:
                 try:
-                    video_path, temp_dir, info = download_tiktok_video(download_url)
+                    if cached_info and redis_client:
+                        # Use cached metadata but still download the video
+                        info = json.loads(cached_info)
+                        video_path, temp_dir, _ = download_tiktok_video(download_url, quality)
+                        # Update cache with fresh download info
+                        redis_client.setex(cache_key, 3600, json.dumps(info))
+                    else:
+                        video_path, temp_dir, info = download_tiktok_video(download_url, quality)
+                        # Cache the metadata for 1 hour (only if Redis is available)
+                        if redis_client:
+                            redis_client.setex(cache_key, 3600, json.dumps(info))
                 except DownloadError as err:
-<<<<<<< HEAD
-                    flash("Unable to download this TikTok link. Please verify the URL.", "danger")
-                except Exception:
-                    flash("Unexpected error while downloading. Try again shortly.", "danger")
-=======
                     flash(_("Unable to download this TikTok link. Please verify the URL."), "danger")
                 except Exception:
                     flash(_("Unexpected error while downloading. Try again shortly."), "danger")
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                 else:
                     @after_this_request
                     def cleanup(response):
@@ -224,11 +255,7 @@ def create_app() -> Flask:
                     download_name = secure_filename(f"{title}{video_path.suffix}") or f"download{video_path.suffix}"
                     return send_file(video_path, as_attachment=True, download_name=download_name)
 
-<<<<<<< HEAD
-        return render_template("index.html", content=content, download_url=download_url)
-=======
         return render_template("index.html", content=content, download_url=download_url, get_locale=get_locale)
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
 
     @app.route("/api/content")
     def content_api():
@@ -241,11 +268,7 @@ def create_app() -> Flask:
         content = load_content()
         if locked_until and current_time < locked_until:
             remaining = int(locked_until - current_time)
-<<<<<<< HEAD
-            flash(f"Account temporarily locked. Try again in {remaining} seconds.", "danger")
-=======
             flash(_("Account temporarily locked. Try again in %(seconds)s seconds.", seconds=remaining), "danger")
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
             return render_template("admin_login.html", content=content)
 
         if request.method == "POST":
@@ -261,19 +284,11 @@ def create_app() -> Flask:
             session["login_attempts"] = session.get("login_attempts", 0) + 1
             if session["login_attempts"] >= MAX_LOGIN_ATTEMPTS:
                 session["locked_until"] = current_time + LOCKOUT_SECONDS
-<<<<<<< HEAD
-                flash("Too many failed attempts. Login locked for 10 minutes.", "danger")
-            else:
-                attempts_left = MAX_LOGIN_ATTEMPTS - session["login_attempts"]
-                flash(
-                    f"Invalid credentials. {attempts_left} attempt(s) remaining before lockout.",
-=======
                 flash(_("Too many failed attempts. Login locked for 10 minutes."), "danger")
             else:
                 attempts_left = MAX_LOGIN_ATTEMPTS - session["login_attempts"]
                 flash(
                     _("Invalid credentials. %(count)s attempt(s) remaining before lockout.", count=attempts_left),
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                     "danger",
                 )
         return render_template("admin_login.html", content=content)
@@ -282,11 +297,7 @@ def create_app() -> Flask:
     @login_required
     def admin_logout():
         session.clear()
-<<<<<<< HEAD
-        flash("Signed out successfully.", "success")
-=======
         flash(_("Signed out successfully."), "success")
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
         return redirect(url_for("admin_login"))
 
     @app.route("/admin", methods=["GET", "POST"])
@@ -330,11 +341,7 @@ def create_app() -> Flask:
                 (background_color, "Background color"),
             ):
                 if not is_valid_hex(color_value):
-<<<<<<< HEAD
-                    flash(f"{label} must be a valid HEX code (e.g., #112233).", "danger")
-=======
                     flash(_("%(label)s must be a valid HEX code (e.g., #112233).", label=label), "danger")
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                     return render_template(
                         "admin_dashboard.html",
                         content=draft_content,
@@ -342,11 +349,7 @@ def create_app() -> Flask:
                     )
 
             if not app_name.strip():
-<<<<<<< HEAD
-                flash("Application name cannot be empty.", "danger")
-=======
                 flash(_("Application name cannot be empty."), "danger")
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
                 return render_template(
                     "admin_dashboard.html",
                     content=draft_content,
@@ -356,11 +359,7 @@ def create_app() -> Flask:
             updated_content = {key: value.strip() if isinstance(value, str) else value for key, value in draft_content.items()}
 
             persist_content(updated_content)
-<<<<<<< HEAD
-            flash("Content updated successfully.", "success")
-=======
             flash(_("Content updated successfully."), "success")
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
             return redirect(url_for("admin_dashboard"))
 
         return render_template(
@@ -374,8 +373,4 @@ app = create_app()
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
-=======
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8004)))
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)

@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
-<html lang="en">
-=======
-<html lang="{{ get_locale() }}">
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
+<html lang="{{ get_locale() }}" {% if get_locale() == 'ar' %}dir="rtl"{% endif %}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
@@ -23,13 +19,8 @@
           <span class="spark"></span>
           <span class="text">{{ content.app_name }}</span>
         </div>
-<<<<<<< HEAD
-        <h1>{{ content.hero_title }}</h1>
-        <p class="subtitle">{{ content.hero_subtitle }}</p>
-=======
         <h1>{{ _('Advanced TikTok Video Downloader') }}</h1>
         <p class="subtitle">{{ _('Save TikTok videos in high quality with smart link recognition, metadata enrichment, and rapid delivery.') }}</p>
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="flash-messages">
@@ -46,37 +37,23 @@
             <input
               type="url"
               name="video_url"
-<<<<<<< HEAD
-              placeholder="{{ content.input_placeholder }}"
-              value="{{ download_url }}"
-              required
-            />
-            <button type="submit">{{ content.cta_text }}</button>
-          </div>
-          <p class="form-hint">No login required. No watermark. Full HD in seconds.</p>
-=======
               placeholder="{{ _('Paste your TikTok link here...') }}"
               value="{{ download_url }}"
               required
             />
+            <select name="quality" class="quality-select">
+              <option value="best">{{ _('Best Quality') }}</option>
+              <option value="4k">4K</option>
+              <option value="1080p">1080p</option>
+              <option value="720p">720p</option>
+            </select>
             <button type="submit">{{ _('Download Now') }}</button>
           </div>
           <p class="form-hint">{{ _('No login required. No watermark. Full HD in seconds.') }}</p>
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
         </form>
       </header>
 
       <section class="features">
-<<<<<<< HEAD
-        <h2>Why creators love {{ content.app_name }}</h2>
-        <div class="feature-grid">
-          {% for point in content.feature_points %}
-          <article class="feature-card">
-            <span class="feature-icon">⚡</span>
-            <p>{{ point }}</p>
-          </article>
-          {% endfor %}
-=======
         <h2>{{ _('Why creators love %(app)s', app=content.app_name) }}</h2>
         <div class="feature-grid">
           <article class="feature-card">
@@ -91,21 +68,16 @@
             <span class="feature-icon">⚡</span>
             <p>{{ _('Built-in privacy shield to strip watermarks & tracking codes') }}</p>
           </article>
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
         </div>
       </section>
 
       <footer class="footer">
-<<<<<<< HEAD
-        <p>Built for visionaries. Powered by InspireDownloader.</p>
-=======
         <p>{{ _('Built for visionaries. Powered by %(app)s.', app=content.app_name) }}</p>
         <div class="lang-switcher">
           <a href="{{ url_for('landing_page', lang='en') }}" class="{% if get_locale() == 'en' %}active{% endif %}">English</a>
           <span>|</span>
           <a href="{{ url_for('landing_page', lang='ar') }}" class="{% if get_locale() == 'ar' %}active{% endif %}">العربية</a>
         </div>
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
       </footer>
     </div>
   </body>

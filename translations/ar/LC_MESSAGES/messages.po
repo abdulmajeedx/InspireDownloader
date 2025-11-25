@@ -105,6 +105,22 @@ msgstr "تحميلات مجمعة مع الطابور الذكي وتتبع ال
 msgid "Built-in privacy shield to strip watermarks & tracking codes"
 msgstr "درع خصوصية مدمج لإزالة العلامات المائية وأكواد التتبع"
 
+#: templates/index.html:44
+msgid "Best Quality"
+msgstr "أفضل جودة"
+
+#: templates/index.html:46
+msgid "4K"
+msgstr "4K"
+
+#: templates/index.html:47
+msgid "1080p"
+msgstr "1080p"
+
+#: templates/index.html:48
+msgid "720p"
+msgstr "720p"
+
 #: templates/index.html:69
 #, python-format
 msgid "Built for visionaries. Powered by %(app)s."

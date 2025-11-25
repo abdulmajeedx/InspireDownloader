@@ -176,8 +176,6 @@ body {
   color: rgba(228, 232, 255, 0.45);
 }
 
-<<<<<<< HEAD
-=======
 .lang-switcher {
   margin-top: 0.5rem;
 }
@@ -189,12 +187,79 @@ body {
   margin: 0 0.25rem;
 }
 
+.quality-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e4e8ff;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.quality-select:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent, #17f1d1);
+}
+
+.quality-select:focus {
+  outline: none;
+  border-color: var(--accent, #17f1d1);
+  box-shadow: 0 0 0 3px rgba(23, 241, 209, 0.2);
+}
+
+.quality-select option {
+  background: #090e1a;
+  color: #e4e8ff;
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] .input-group {
+  flex-direction: row;
+}
+
+[dir="rtl"] .input-icon {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+[dir="rtl"] .feature-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+[dir="rtl"] .footer {
+  text-align: center;
+}
+
+[dir="rtl"] .lang-switcher a {
+  margin: 0 0.25rem;
+}
+
+/* Language-specific font adjustments */
+html[lang="ar"] body {
+  font-family: 'Noto Sans Arabic', 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* RTL text alignment */
+html[lang="ar"] .hero h1,
+html[lang="ar"] .hero .subtitle,
+html[lang="ar"] .features h2,
+html[lang="ar"] .feature-card p {
+  text-align: right;
+}
+
+html[lang="ar"] .download-form {
+  text-align: right;
+}
+
 .lang-switcher a:hover,
 .lang-switcher a.active {
   color: var(--accent, #17f1d1);
 }
 
->>>>>>> 04f587f (Add multi-language support with Flask-Babel)
 .admin-page {
   background: radial-gradient(circle at top, rgba(123, 75, 255, 0.35), transparent 60%),
     radial-gradient(circle at bottom, rgba(23, 241, 209, 0.25), transparent 50%),
